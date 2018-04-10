@@ -1,17 +1,39 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+        <title>MRZ Extractor Area Test</title>
+
+        <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+        <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+        <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
+
         <script src="../mrz-extractor.js"></script>
-        <script src="js/opencv.js"></script>
-        
+        <script src="js/opencv.js"></script>        
     </head>
     <body>
-        <input type="button" id="getMRZArea" value="Get MRZ area" />        
-        <br><br>
-        <canvas id="canvas">
-            Your browser does not support the HTML5 canvas tag.
-        </canvas>
-        <br><br>
-        <input type="file" id="source" />
+
+        <div class="container">
+            <div class="row">
+                <div class="column column-100">
+                    <h1>MRZ Extractor</h1>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="column column-100">
+                        <input type="file" id="source" /> <button class="button button-large" id="getMRZArea">Extract MRZ</button>
+                        <br><br>
+                        <span id="mrzFound"></span>
+                        <br>
+                        <canvas id="canvas">
+                            Your browser does not support the HTML5 canvas tag.
+                        </canvas>
+                </div>
+            </div>
+        </div>
+
+      
         
         
 
@@ -22,8 +44,9 @@
 
                 let getMRZAreaButton = document.getElementById('getMRZArea');
                 getMRZAreaButton.addEventListener('click', (e) => {                    
+                    document.getElementById('mrzFound').innerHTML = "";
                     let mrzExtractor = new MrzExtractor(canvas, false);
-                    alert('MRZ area found: ' + mrzExtractor.extractMRZ());
+                    document.getElementById('mrzFound').innerHTML = "MRZ found: " + (mrzExtractor.extractMRZ() ? "YES" : "NO");
                 });
 
                 let inputElement = document.getElementById('source');
