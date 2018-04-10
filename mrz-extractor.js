@@ -4,6 +4,9 @@
  * 
  * @param {Canvas} canvas - JS object of the canvas where image with MRZ area is painted.
  * @param {boolean} [rotate=false] - Should the image in the canvas be rotated clockwise 90 deg before MRZ area extraction?
+ *
+ * TODO: Add console.log outputs
+ *       Check extraction for rotated documents       
  */
 function MrzExtractor(canvas, rotate = false) {
 	
