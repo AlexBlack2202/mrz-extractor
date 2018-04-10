@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <script src="../mrz-extractor.js"></script>
+        <script src="js/opencv.js"></script>
+        
+    </head>
+    <body>
+        <input type="button" id="getMRZArea" value="Get MRZ area" />        
+        <br><br>
+        <canvas id="canvas">
+            Your browser does not support the HTML5 canvas tag.
+        </canvas>
+        <br><br>
+        <input type="file" id="source" />
+        
+        
+
+        <script>
+            window.onload = function() {
+
+                let canvas = document.getElementById('canvas');
+
+                let getMRZAreaButton = document.getElementById('getMRZArea');
+                getMRZAreaButton.addEventListener('click', (e) => {                    
+                    let mrzExtractor = new MrzExtractor(canvas, false);
+                    alert('MRZ area found: ' + mrzExtractor.extractMRZ());
+                });
+
+                let inputElement = document.getElementById('source');
+                inputElement.addEventListener('change', (e) => {
+                        let files = e.target.files;
+                        if (files.length > 0) {
+                            let imgUrl = URL.createObjectURL(files[0]);
+                            loadImageToCanvas(imgUrl);
+                        }
+                }, false);
+
+                let loadImageToCanvas = (url) => {
+                    let canvas = document.getElementById('canvas');
+                    let ctx = canvas.getContext('2d');
+                    let img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = function() {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                    };
+                    img.src = url;
+                };
+
+            }
+        </script>
+
+    </body>
+</html>

@@ -3,14 +3,19 @@
  * Extracts a MRZ area from an image of an identity document (eg. Passport, Identity card, etc...).
  * 
  * @param {Canvas} canvas - JS object of the canvas where image with MRZ area is painted.
- * @param {boolean} [rotate=false] - Should the image in the canvas be rotated counter-clockwise 90 deg before MRZ area extraction?
+ * @param {boolean} [rotate=false] - Should the image in the canvas be rotated clockwise 90 deg before MRZ area extraction?
  */
-function MrzExtractor(canvas, rotate  = false) {
+function MrzExtractor(canvas, rotate = false) {
 	
 	this.canvas = canvas;
 	this.rotate = rotate;
 
-	this.original = null;	
+	this.original = null;
+
+	this.IMG_HEIGHT = 600;
+	this.RECTX = this.IMG_HEIGHT / 46.154;
+	this.RECTY = this.IMG_HEIGHT / 120.0;
+	this.SQLXY = this.IMG_HEIGHT / 39.0;
 	
 	/**
 	 * Main entry method to extract MRZ area from
@@ -23,6 +28,7 @@ function MrzExtractor(canvas, rotate  = false) {
 		this.original = cv.imread(this.canvas);
 		// Rotate if so directed
 		if (this.rotate) {
+			console.log('Rotating image for 90 deg...');
 			this.rotateImage90();
 		}
 		// Adjust text alignment and find MRZ area
@@ -31,21 +37,20 @@ function MrzExtractor(canvas, rotate  = false) {
 	};
 	
 	/**
-	 * Rotates image counter-clockwise for 90 deg.
+	 * Rotates image clockwise for 90 deg.
 	 * 
 	 * Set input parameter 'rotate' to true if the image in canvas
 	 * was taken in portrait mode.
 	 */
 	this.rotateImage90 = () => {		
-		let dsize = new cv.Size(original.cols, original.rows);
-		let center = new cv.Point(original.cols / 2, original.rows / 2);				
+		let dsize = new cv.Size(this.original.cols, this.original.rows);
+		let center = new cv.Point(this.original.cols / 2, this.original.rows / 2);				
 		let M = cv.getRotationMatrix2D(center, -90, 1);
-		cv.warpAffine(original, original, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+		cv.warpAffine(this.original, this.original, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
 		
 		// Paint rotated image back to canvas
-		cv.imshow(this.canvas, original);
+		cv.imshow(this.canvas, this.original);
 
-		dsize.delete();
 		M.delete();		
 	};
 	
@@ -58,13 +63,13 @@ function MrzExtractor(canvas, rotate  = false) {
 		// Returns an angle of Hough line
 		let houghAngle = (p1,p2) => { Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI); };
 
-		// Convert the original image to maximum height of 1200px
-		let scaleW = original.size().height / 1200;
-		let dsize = new cv.Size(original.size().width / scaleW, 1200);
-		cv.resize(original, original, dsize, 0, 0, cv.INTER_AREA);
+		// Convert the original image to maximum height of 'this.IMG_HEIGHT' px
+		let scaleW = this.original.size().height / this.IMG_HEIGHT;		
+		let dsize = new cv.Size(this.original.size().width / scaleW, this.IMG_HEIGHT);
+		cv.resize(this.original, this.original, dsize, 0, 0, cv.INTER_AREA);
 	
 		// Clone original because we do different things to image further on
-		let dst = original.clone();
+		let dst = this.original.clone();
 		
 		cv.cvtColor(dst, dst, cv.COLOR_RGBA2GRAY, 0);
 		let ksize = new cv.Size(3, 3);
@@ -72,7 +77,7 @@ function MrzExtractor(canvas, rotate  = false) {
 		
 		// Blackhat morphology to identify black areas on light background
 		let rectKernel = new cv.Mat();
-		rectKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(16, 10));
+		rectKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(this.RECTX, this.RECTY));
 
 		cv.Sobel(dst, dst, cv.CV_8U, 1, 0, 1);
 		cv.convertScaleAbs(dst, dst, 1, 0);
@@ -82,7 +87,7 @@ function MrzExtractor(canvas, rotate  = false) {
 		cv.threshold(dst, dst, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU);
 		
 		let sqKernel = new cv.Mat();
-		sqKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(31, 31));
+		sqKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(this.SQLXY, this.SQLXY));
 		cv.morphologyEx(dst, dst, cv.MORPH_CLOSE, sqKernel);
 		let M = cv.Mat.ones(3, 3, cv.CV_8U);
 		cv.erode(dst, dst, M, new cv.Point(-1,-1), 4);
@@ -136,12 +141,12 @@ function MrzExtractor(canvas, rotate  = false) {
 		}
 	
 		// Rotate original canvas image
-		let dsize1 = new cv.Size(original.cols, original.rows);
-		let center = new cv.Point(original.cols / 2, original.rows / 2);				
+		let dsize1 = new cv.Size(this.original.cols, this.original.rows);
+		let center = new cv.Point(this.original.cols / 2, this.original.rows / 2);				
 		let M1 = cv.getRotationMatrix2D(center, rotateForAngle, 1);
-		cv.warpAffine(original, original, M1, dsize1, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+		cv.warpAffine(this.original, this.original, M1, dsize1, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
 			
-		cv.imshow(this.canvas, original);
+		cv.imshow(this.canvas, this.original);
 
 		M1.delete();		
 		dst.delete(); 
@@ -154,7 +159,7 @@ function MrzExtractor(canvas, rotate  = false) {
 	 */
 	this.findMRZArea = () => {
 
-		let dst = original.clone(); 
+		let dst = this.original.clone(); 
 
 		cv.cvtColor(dst, dst, cv.COLOR_RGBA2GRAY, 0);
 
@@ -162,7 +167,7 @@ function MrzExtractor(canvas, rotate  = false) {
 		cv.GaussianBlur(dst, dst, ksize, 0, 0);
 
 		let rectKernel = new cv.Mat();
-		rectKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(16, 10));
+		rectKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(this.RECTX, this.RECTY));
 		cv.morphologyEx(dst, dst, cv.MORPH_BLACKHAT, rectKernel);
 
 		cv.Sobel(dst, dst, cv.CV_8U, 1, 0, 1);
@@ -172,7 +177,7 @@ function MrzExtractor(canvas, rotate  = false) {
 		cv.threshold(dst, dst, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU);
 		
 		let sqKernel = new cv.Mat();
-		sqKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(31, 31));
+		sqKernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(this.SQLXY, this.SQLXY));
 		cv.morphologyEx(dst, dst, cv.MORPH_CLOSE, sqKernel);
 		let M = cv.Mat.ones(3, 3, cv.CV_8U);
 		cv.erode(dst, dst, M, new cv.Point(-1,-1), 4);
@@ -206,9 +211,14 @@ function MrzExtractor(canvas, rotate  = false) {
 				if (y < 0) { y = 0; };
 				if (w < 0) { w = 0; };
 				if (h < 0) { h = 0; };
+
+				/*if (x > rect.x) { x = rect.x; };
+				if (y > rect.y) { y = rect.y; };
+				if (w > rect.width) { w = rect.width; };
+				if (h > rect.height) { h = rect.height; };*/
 	
 				rect1 = new cv.Rect(x,y,w,h);						
-				original = original.roi(rect1);	// Crop MRZ area from original image
+				this.original = this.original.roi(rect1);	// Crop MRZ area from original image
 	
 				mrzAreaFound = true;
 	
@@ -220,12 +230,12 @@ function MrzExtractor(canvas, rotate  = false) {
 			return false;
 		}
 	
-		cv.imshow(this.canvas, original);
+		cv.imshow(this.canvas, this.original);
 	
 		dst.delete();
 		sqKernel.delete(); rectKernel.delete();
 		contours.delete(); hierarchy.delete();
-		original.delete();
+		this.original.delete();
 	
 		return true;
 	};
