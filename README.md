@@ -42,3 +42,7 @@ Second input attribute (eg. `new MrzExtractor(_, true|false)`) defines if the im
 Check out `test` folder where you can upload your own images of documents and test extraction of MRZ areas. 
 
 __A note of warning__: currently extraction works only for two and three line MRZ areas.
+
+### Contributing
+
+I am __not__ a professional JavaScript developer and this is my first try at creating something useful with JavaScript. Any contribution to this repository is welcome via pull request.
