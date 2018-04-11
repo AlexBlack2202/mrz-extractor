@@ -47,6 +47,6 @@ __A note of warning__: currently extraction works only for two and three line MR
 
 I am __not__ a professional JavaScript developer and this is my first try at creating something useful with JavaScript. Any contribution to this repository is welcome via pull request.
 
-#### References
+### References
 
-This work is a partial rewrite of [Detecting MRZ in passport](https://www.pyimagesearch.com/2015/11/30/detecting-machine-readable-zones-in-passport-images/).
+This work is a partial rewrite of [Detecting MRZ in passport images](https://www.pyimagesearch.com/2015/11/30/detecting-machine-readable-zones-in-passport-images/).
